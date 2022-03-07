@@ -3,3 +3,4 @@
 /dist
 /pkg
 package-lock.json
+.env
