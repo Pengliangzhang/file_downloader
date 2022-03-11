@@ -28,9 +28,14 @@ DROP TABLE IF EXISTS `common_file`;
 CREATE TABLE `common_file`
 (
     `id`                                  int(8)      NOT NULL AUTO_INCREMENT,
-    `file_name`                           varchar(16) NOT NULL COMMENT '',
-    `path`                                varchar(16) NOT NULL COMMENT '',
-    `is_approved`                         tinyint(1)  DEFAULT NULL,
+    `scenario_name`                       varchar(16) NOT NULL COMMENT '',
+    `check_name`                          varchar(32) NOT NULL COMMENT '',
+    `check_alias`                         varchar(32) NOT NULL COMMENT '',
+    `blob`                                LONGBLOB  NOT NULL COMMENT 'Blob',
+    `isVaild`                             tinyint(1)  DEFAULT 1 NOT NULL,
+    `downloaded`                          smallint(5) DEFAULT 0 NOT NULL,
+    `created_user`                        varchar(16) NOT NUll,
+    `updated_user`                        varchar(16) NOT NUll,
     `create_date_time`                    datetime             DEFAULT CURRENT_TIMESTAMP COMMENT 'create date time',
     `update_date_time`                    datetime             DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'update date time',
     PRIMARY KEY (`id`) USING BTREE

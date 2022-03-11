@@ -1,27 +1,37 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
 
 @Entity()
-export class File {
+export class common_file {
   @PrimaryGeneratedColumn()
   public id: number;
 
-  /* fileType stands for the final purpose of the file:
-   * - uploaded: uploaded files (from grapesjs template editor)
-   * - report: generated report pdf or image files
-   * - signature: user's signature images
-   */
   @Column()
-  public fileType: string;
+  public scenario_name: string;
 
   @Column()
-  public fileDir: string;
+  public check_name: string;
 
   @Column()
-  public fileName: string;
+  public check_alias: string;
 
   @Column()
-  public mimeType: string;
+  public blob: Buffer;
 
   @Column()
-  public originalName: string;
+  public isVaild: number;
+
+  @Column()
+  public downloaded: number;
+
+  @Column()
+  public created_user: string;
+
+  @Column()
+  public updated_user: string;
+
+  @CreateDateColumn({ type: 'timestamp' })
+  public create_date_time: Date;
+
+  @CreateDateColumn({ type: 'timestamp' })
+  public update_date_time: Date;
 }
