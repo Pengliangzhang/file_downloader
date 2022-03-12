@@ -1,11 +1,10 @@
-import { Controller, Post, Get, Delete, Body, Req, Param, Res, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { Controller, Post, Get, Body, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Express, Response } from 'express';
 import { FileService } from './file.service';
 import { FileUploadReqDto } from '../dto/fileUploadReq.dto';
 import { FileDownloadReqDto } from '../dto/fileDownloadReq.dto';
-
-// import { File } from './file.entity';
+import { common_file } from './file.entity';
 
 @Controller('file')
 export class FileController {

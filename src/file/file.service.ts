@@ -2,17 +2,10 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { InjectRepository } from '@nestjs/typeorm';
 import { common_file } from './file.entity';
 import { Repository, getConnection, Connection } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
-import { Express } from 'express';
-import { Readable } from 'stream';
-import { Sequelize } from 'sequelize-typescript'
 import * as fs from 'fs-extra';
 const archiver = require('archiver');
 import { FileUploadReqDto } from '../dto/fileUploadReq.dto';
 import { FileDownloadReqDto } from '../dto/fileDownloadReq.dto';
-// import * as path from 'path';
-
-// import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class FileService {
