@@ -86,6 +86,9 @@ export class FileService {
     if (!file.originalname.match(/\.(xml)$/)) {
       throw new Error('Only xml files are allowed!');
     }
+    if (file.size > 100000) {
+      throw new Error('File size cannot exceed 100KB!');
+    }
     const formattedData = JSON.parse(scenarioInfo.toString());
     const newFileRecord = await this.filesRepository.create({
       scenario_name: formattedData.scenarioName,
