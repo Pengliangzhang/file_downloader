@@ -1,13 +1,15 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { common_file } from './file.entity';
-import { Repository } from 'typeorm';
+import { Repository, getConnection, Connection } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Express } from 'express';
 import { Readable } from 'stream';
+import { Sequelize } from 'sequelize-typescript'
 import * as fs from 'fs-extra';
 const archiver = require('archiver');
-import { FileReqDto } from './../dto/fileReq.dto';
+import { FileUploadReqDto } from '../dto/fileUploadReq.dto';
+import { FileDownloadReqDto } from '../dto/fileDownloadReq.dto';
 // import * as path from 'path';
 
 // import { v4 as uuid } from 'uuid';
@@ -16,100 +18,142 @@ import { FileReqDto } from './../dto/fileReq.dto';
 export class FileService {
   constructor(
     @InjectRepository(common_file)
-    private filesRepository: Repository<common_file>
+    private filesRepository: Repository<common_file>,
+    private connection: Connection
   ) {
-
   }
 
-  getAllFiles() {
-    const finalReportPath = __dirname + "/../../resources/xml/abc.xml";
-    const finalReportPath2 = __dirname + "/../../resources/xml/header.xml";
-    const fileOne = fs.createReadStream(finalReportPath);
-    const fileTwo = fs.createReadStream(finalReportPath2);
-    // this.zipFiles();
-    return fs.createReadStream(finalReportPath);
+  async getAllFiles(fileDownloadInfo: FileDownloadReqDto) {
+    const date = new Date();
+    const folderName = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()+1}`
+    const folderPath = `${__dirname}/../../resources/${folderName}`
+    const friendlyFileName = this.generateFriendlyFilename(fileDownloadInfo.scenarioName);
+    const resourcesDir = `${folderPath}/${friendlyFileName}.zip`
+
+    const yesMill = date.getTime() - 1000 * 60 * 60 * 24 * 3;
+    const twoDatsAgo = new Date(yesMill);
+    const deleteFolderName = `${twoDatsAgo.getFullYear()}-${twoDatsAgo.getMonth()+1}-${twoDatsAgo.getDate()+1}`
+    const deleteFolderPath = `${__dirname}/../../resources/${deleteFolderName}`
+    try {
+      if (!fs.existsSync(folderPath)){
+        fs.mkdirSync(folderPath);
+      }
+      if (fs.existsSync(deleteFolderPath)){
+        fs.rmdirSync(deleteFolderPath);
+      }
+    } catch(e) {
+      console.log("An error occurred.")
+    }
+    
+    await this.createZippedFile(fileDownloadInfo, resourcesDir);
+    return fs.createReadStream(resourcesDir);
   }
 
-  // zipFiles() {
-  //   const output = fs.createWriteStream(__dirname + '/../../example.zip');
-  //   const archive = archiver('zip', {
-  //     zlib: { level: 9 } // Sets the compression level.
-  //   });
+  async createZippedFile(fileDownloadInfo: FileDownloadReqDto, fullPath: string) {
+    const output = fs.createWriteStream(fullPath);
+    const archive = archiver('zip', {
+      zlib: { level: 9 } // Sets the compression level.
+    });
 
-  //   // listen for all archive data to be written
-  //   // 'close' event is fired only when a file descriptor is involved
-  //   output.on('close', function () {
-  //     console.log(archive.pointer() + ' total bytes');
-  //     console.log('archiver has been finalized and the output file descriptor has closed.');
-  //   });
+    // good practice to catch this error explicitly
+    archive.on('error', function (err) {
+      console.log(err);
+      throw err;
+    });
 
-  //   // This event is fired when the data source is drained no matter what was the data source.
-  //   // It is not part of this library but rather from the NodeJS Stream API.
-  //   // @see: https://nodejs.org/api/stream.html#stream_event_end
-  //   output.on('end', function () {
-  //     console.log('Data has been drained');
-  //   });
+    // pipe archive data to the file
+    archive.pipe(output);
 
-  //   // good practice to catch warnings (ie stat failures and other non-blocking errors)
-  //   archive.on('warning', function (err) {
-  //     if (err.code === 'ENOENT') {
-  //       // log warning
-  //     } else {
-  //       // throw error
-  //       throw err;
-  //     }
-  //   });
+    // append a file from buffer
+    if (Array.isArray(fileDownloadInfo.checkList)) {
+      await Promise.all(fileDownloadInfo.checkList.map(async (item) => {
+        const vaildFile = await this.readVaildFile({scenarioName: fileDownloadInfo.scenarioName, checkName: item["checkName"], checkAlias: "", xmlType: item["type"]});
+        if (vaildFile) {
+          const buffer3 = Buffer.from(vaildFile.blob);
+          archive.append(buffer3, { name: vaildFile.file_name });
+        }
+      }))
+    }
 
-  //   // good practice to catch this error explicitly
-  //   archive.on('error', function (err) {
-  //     throw err;
-  //   });
-
-  //   // pipe archive data to the file
-  //   archive.pipe(output);
-
-  //   // append a file from stream
-  //   const file1 = __dirname + "/../../resources/xml/abc.xml";
-  //   const readFile = fs.createReadStream(file1);
-  //   console.log(readFile);
-  //   archive.append(readFile, { name: 'file1.txt' });
-
-  //   // append a file from string
-  //   archive.append('string cheese!', { name: 'file2.txt' });
-
-  //   // append a file from buffer
-  //   const buffer3 = Buffer.from('buff it!');
-  //   archive.append(buffer3, { name: 'file3.txt' });
-
-  //   // append a file
-  //   archive.file('file1.txt', { name: 'file4.txt' });
-
-  //   // finalize the archive (ie we are done appending files but streams have to finish yet)
-  //   // 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
-  //   archive.finalize();
-  // }
+    archive.finalize();
+  }
 
   async uploadMulterFile(
     userId: string,
-    scenarioInfo: FileReqDto,
+    scenarioInfo: FileUploadReqDto,
     file: Express.Multer.File
   ) {
     if (!file.originalname.match(/\.(xml)$/)) {
       throw new Error('Only xml files are allowed!');
-    }  
+    }
+    const formattedData = JSON.parse(scenarioInfo.toString());
     const newFileRecord = await this.filesRepository.create({
-      scenario_name: "RCX",
-      check_name: "ABAP",
-      check_alias: "ABAP",
+      scenario_name: formattedData.scenarioName,
+      check_name: formattedData.checkName,
+      check_alias: formattedData.checkName,
+      xml_type: formattedData.xmlType,
       blob: file.buffer,
+      file_name: file.originalname,
       isVaild: 1,
       downloaded: 0,
       created_user: userId,
       updated_user: userId,
     });
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const currVaildFile = await this.readVaildFile(formattedData);      
+      if (currVaildFile) {
+        currVaildFile.isVaild = 0;
+        await queryRunner.manager.save(currVaildFile);
+      }
+      await queryRunner.manager.save(newFileRecord);
 
-    await this.filesRepository.save(newFileRecord);
+      await queryRunner.commitTransaction();
+    }catch (err) {
+        await queryRunner.rollbackTransaction();
+    }finally {
+        await queryRunner.release();
+    }
 
     return newFileRecord;
   }
+
+  async readVaildFile(
+    scenarioInfo: FileUploadReqDto,
+  ) {
+    let file = null;
+    if (scenarioInfo.checkAlias) {
+      file = await getConnection()
+        .getRepository(common_file)
+        .createQueryBuilder("file")
+        .where("file.scenario_name = :scenario_name", { scenario_name: scenarioInfo.scenarioName })
+        .andWhere("file.check_name = :check_name", { check_name: scenarioInfo.checkName })
+        .andWhere("file.check_alias = :check_alias", { check_alias: scenarioInfo.checkAlias })
+        .andWhere("file.isVaild = :isVaild", { isVaild: 1 })
+        .getOne();
+    } else {
+      file = await getConnection()
+        .getRepository(common_file)
+        .createQueryBuilder("file")
+        .where("file.scenario_name = :scenario_name", { scenario_name: scenarioInfo.scenarioName })
+        .andWhere("file.check_name = :check_name", { check_name: scenarioInfo.checkName })
+        .andWhere("file.isVaild = :isVaild", { isVaild: 1 })
+        .getOne();
+    }
+    return file;
+  }
+
+  // Generate a friendly filename
+  generateFriendlyFilename(scenarioName: string){
+    // Generate a randomStr (UUID is not user-friendly and overskill here)
+    const randomStr = Array(6)
+      .fill(null)
+      .map(() => Math.round(Math.random() * 16).toString(16))
+      .join('');
+    // Generate a new unique filename = "timestamp-"" + "randomnStr-" + "friendlyName"
+    return `${scenarioName}-${new Date().getTime()}-${randomStr}`;
+  }
+
 }

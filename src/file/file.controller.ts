@@ -2,7 +2,8 @@ import { Controller, Post, Get, Delete, Body, Req, Param, Res, UploadedFile, Upl
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Express, Response } from 'express';
 import { FileService } from './file.service';
-import { FileReqDto } from './../dto/fileReq.dto';
+import { FileUploadReqDto } from '../dto/fileUploadReq.dto';
+import { FileDownloadReqDto } from '../dto/fileDownloadReq.dto';
 
 // import { File } from './file.entity';
 
@@ -10,7 +11,7 @@ import { FileReqDto } from './../dto/fileReq.dto';
 export class FileController {
   constructor(
     private readonly fileService: FileService,
-  ) {}
+  ) { }
 
   // Get all files
   @Get()
@@ -19,8 +20,8 @@ export class FileController {
   }
 
   @Post()
-  async queryAllFiles(@Res() res: Response) {
-    const stream = await this.fileService.getAllFiles();
+  async queryAllFiles( @Body('fileDownloadInfo') fileDownloadInfo: FileDownloadReqDto, @Res() res: Response) {
+    const stream = await this.fileService.getAllFiles(fileDownloadInfo);
     stream.pipe(res);
   }
 
@@ -28,12 +29,9 @@ export class FileController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
-    @Param('scenarioName') scenarioName: string,
-    @Body('scenarioInfo') scenarioInfo: FileReqDto,
+    @Body('scenarioInfo') scenarioInfo: FileUploadReqDto,
     @UploadedFile() file: Express.Multer.File
   ) {
-    console.log(scenarioName);
-    
     return this.fileService.uploadMulterFile("T10101010", scenarioInfo, file);
   }
 }

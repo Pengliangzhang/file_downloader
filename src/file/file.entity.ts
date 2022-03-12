@@ -15,7 +15,13 @@ export class common_file {
   public check_alias: string;
 
   @Column()
+  public xml_type: string;  
+
+  @Column()
   public blob: Buffer;
+
+  @Column()
+  public file_name: string;
 
   @Column()
   public isVaild: number;
