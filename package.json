@@ -27,7 +27,7 @@
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/serve-static": "^2.2.2",
     "@nestjs/typeorm": "^8.0.3",
-    "archiver": "^5.3.0",
+    "archiver": "file:pkg/archiver",
     "class-validator": "^0.13.2",
     "fs-extra": "^10.0.1",
     "mysql": "^2.18.1",

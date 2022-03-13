@@ -84,16 +84,16 @@ export class FileService {
     }
     const formattedData = JSON.parse(scenarioInfo.toString());
     const newFileRecord = await this.filesRepository.create({
-      scenario_name: formattedData.scenarioName,
-      check_name: formattedData.checkName,
-      check_alias: formattedData.checkName,
-      xml_type: formattedData.xmlType,
+      scenarioName: formattedData.scenarioName,
+      checkName: formattedData.checkName,
+      checkAlias: formattedData.checkName,
+      xmlType: formattedData.xmlType,
       blob: file.buffer,
-      file_name: file.originalname,
+      fileName: file.originalname,
       isVaild: 1,
       downloaded: 0,
-      created_user: userId,
-      updated_user: userId,
+      createdUser: userId,
+      updatedUser: userId,
     });
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();

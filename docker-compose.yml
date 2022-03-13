@@ -1,0 +1,22 @@
+version: "3.5"
+
+services:
+  sga-reporting-backend:
+    build:
+      context: .
+    image: sap-rc-file-backend:${IMAGE_VERSION}-${DOCKER_ENV}
+    container_name: sap-rc--backend-container
+    environment: 
+      TYPEORM_DB_TYPE: "${TYPEORM_DB_TYPE}"
+      TYPEORM_DB_HOST: "${TYPEORM_DB_HOST}"
+      TYPEORM_DB_PORT: "${TYPEORM_DB_PORT}"
+      TYPEORM_DB_USERNAME: "${TYPEORM_DB_USERNAME}"
+      TYPEORM_DB_PASSWORD: "${TYPEORM_DB_PASSWORD}"
+      TYPEORM_DB_DATABASE: "${TYPEORM_DB_DATABASE}"
+      TYPEORM_DB_AUTOLOADENTITIES: "${TYPEORM_DB_AUTOLOADENTITIES}"
+      TYPEORM_DB_SYNCHRONIZE: "${TYPEORM_DB_SYNCHRONIZE}"
+    volumes: 
+      - ./files:/app/files
+    ports:
+      - "33000:33000"
+

@@ -5,39 +5,39 @@ export class common_file {
   @PrimaryGeneratedColumn()
   public id: number;
 
-  @Column()
-  public scenario_name: string;
+  @Column({ name: "scenario_name", type: "varchar", length: 16 })
+  public scenarioName: String;
 
-  @Column()
-  public check_name: string;
+  @Column({ name: "check_name", type: "varchar", length: 32 })
+  public checkName: String;
 
-  @Column()
-  public check_alias: string;
+  @Column({ name: "check_alias", type: "varchar", length: 32 })
+  public checkAlias: String;
 
-  @Column()
-  public xml_type: string;  
+  @Column({ name: "xml_type", type: "varchar", length: 8 })
+  public xmlType: String;  
 
   @Column()
   public blob: Buffer;
 
-  @Column()
-  public file_name: string;
+  @Column({ name: "file_name", type: "varchar", length: 32 })
+  public fileName: String;
 
-  @Column()
+  @Column({name: "isVaild"})
   public isVaild: number;
 
-  @Column()
+  @Column({name: "downloaded"})
   public downloaded: number;
 
-  @Column()
-  public created_user: string;
+  @Column({ name: "created_user", type: "varchar", length: 16 })
+  public createdUser: String;
 
-  @Column()
-  public updated_user: string;
+  @Column({ name: "updated_user", type: "varchar", length: 16 })
+  public updatedUser: String;
 
-  @CreateDateColumn({ type: 'timestamp' })
-  public create_date_time: Date;
+  @CreateDateColumn({ name: 'create_date_time', type: 'timestamp' })
+  public createDateTime: Date;
 
-  @CreateDateColumn({ type: 'timestamp' })
-  public update_date_time: Date;
+  @CreateDateColumn({ name: 'update_date_time', type: 'timestamp' })
+  public updateDateTime: Date;
 }
