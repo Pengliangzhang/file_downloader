@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Get, Body, Res, UploadedFile, UseGuards, UseInterceptors, Param } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express, Response } from 'express';
 import { FileService } from './file.service';
@@ -32,5 +32,19 @@ export class FileController {
     @UploadedFile() file: Express.Multer.File
   ) {
     return this.fileService.uploadMulterFile("T10101010", scenarioInfo, file);
+  }
+
+  // Upload file db
+  @Get('vaildScenario')
+  async getVaildScenarios() {
+    return this.fileService.queryVaildScenario();
+  }
+
+  // Upload file db
+  @Get('vaildCheckByScenario/:scenario')
+  async getVaildChecksByScenario(
+    @Param('scenario') scenario: string
+  ) {
+    return this.fileService.queryVaildScenarioCheck(scenario);
   }
 }

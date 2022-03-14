@@ -127,6 +127,7 @@ export class FileService {
         .where("file.scenario_name = :scenario_name", { scenario_name: scenarioInfo.scenarioName })
         .andWhere("file.check_name = :check_name", { check_name: scenarioInfo.checkName })
         .andWhere("file.check_alias = :check_alias", { check_alias: scenarioInfo.checkAlias })
+        .andWhere("file.xml_type = :xml_type", { xml_type: scenarioInfo.xmlType })
         .andWhere("file.isVaild = :isVaild", { isVaild: 1 })
         .getOne();
     } else {
@@ -135,6 +136,7 @@ export class FileService {
         .createQueryBuilder("file")
         .where("file.scenario_name = :scenario_name", { scenario_name: scenarioInfo.scenarioName })
         .andWhere("file.check_name = :check_name", { check_name: scenarioInfo.checkName })
+        .andWhere("file.xml_type = :xml_type", { xml_type: scenarioInfo.xmlType })
         .andWhere("file.isVaild = :isVaild", { isVaild: 1 })
         .getOne();
     }
@@ -150,6 +152,33 @@ export class FileService {
       .join('');
     // Generate a new unique filename = "timestamp-"" + "randomnStr-" + "friendlyName"
     return `${scenarioName}-${new Date().getTime()}-${randomStr}`;
+  }
+
+  // Generate a friendly filename
+  async queryVaildScenario(){
+    const scenarioList = await getConnection()
+        .getRepository(common_file)
+        .createQueryBuilder("file")
+        .select("DISTINCT (file.scenario_name)", "scenarioName")
+        .where("file.isVaild = :isVaild", { isVaild: 1 })
+        .groupBy("file.scenario_name")
+        .getRawMany()
+    return scenarioList;
+  }
+
+  // Generate a friendly filename
+  async queryVaildScenarioCheck(scenarioName: String){
+    const vaildCheckList = await getConnection()
+        .getRepository(common_file)
+        .createQueryBuilder("file")
+        .select("file.check_name AS checkName, file.xml_type AS xmlType, file.check_alias", "checkAlias")
+        .where("file.scenario_name = :scenario_name", { scenario_name: scenarioName })
+        .andWhere("file.isVaild = :isVaild", { isVaild: 1 })
+        .orderBy("file.check_name")
+        .addOrderBy("file.check_alias")
+        .getRawMany()
+        // .getSql()
+    return vaildCheckList;
   }
 
 }
