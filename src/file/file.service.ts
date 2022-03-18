@@ -177,8 +177,20 @@ export class FileService {
         .orderBy("file.check_name")
         .addOrderBy("file.check_alias")
         .getRawMany()
-        // .getSql()
-    return vaildCheckList;
+      const vaildCheckMap = new Map();
+      vaildCheckList.forEach((item) => {
+        let checkArr = [];
+        if (vaildCheckMap.get(item.checkName)) {
+          checkArr = vaildCheckMap.get(item.checkName)
+        }
+        checkArr.push(item);      
+        vaildCheckMap.set(item.checkName, checkArr);
+      });
+      const response = {}
+      vaildCheckMap.forEach((key, value) => {
+        response[value] = key
+      });
+    return response;
   }
 
 }
