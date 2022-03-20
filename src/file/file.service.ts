@@ -32,7 +32,7 @@ export class FileService {
         fs.mkdirSync(folderPath);
       }
       if (fs.existsSync(deleteFolderPath)){
-        fs.rmdirSync(deleteFolderPath);
+        fs.rm(deleteFolderPath, { recursive: true, force: true });
       }
     } catch(e) {
       console.log("An error occurred.")
@@ -63,7 +63,7 @@ export class FileService {
         const vaildFile = await this.readVaildFile({scenarioName: fileDownloadInfo.scenarioName, checkName: item["checkName"], checkAlias: "", xmlType: item["type"]});
         if (vaildFile) {
           const buffer3 = Buffer.from(vaildFile.blob);
-          archive.append(buffer3, { name: vaildFile.file_name });
+          archive.append(buffer3, { name: vaildFile.fileName });
         }
       }))
     }
