@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Body, Res, UploadedFile, UseGuards, UseInterceptors, Param } from '@nestjs/common';
+import { Controller, Post, Get, Body, Res, UploadedFile, UseGuards, UseInterceptors, Param, StreamableFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express, Response } from 'express';
 import { FileService } from './file.service';
 import { FileUploadReqDto } from '../dto/fileUploadReq.dto';
+import { CheckReqDo } from '../do/checkReq.do';
 import { FileDownloadReqDto } from '../dto/fileDownloadReq.dto';
 import { common_file } from './file.entity';
 
@@ -20,7 +21,18 @@ export class FileController {
 
   @Post()
   async queryAllFiles( @Body('fileDownloadInfo') fileDownloadInfo: FileDownloadReqDto, @Res() res: Response) {
-    const stream = await this.fileService.getAllFiles(fileDownloadInfo);
+    const path = await this.fileService.getAllFiles(fileDownloadInfo);
+    res.status(200).send(path);
+  }
+
+  @Get('zip/:path')
+  async getAZipFile(@Param('path') path: string, @Res() res: Response) {   
+    path = path.replace('&', '/');
+    const stream = await this.fileService.getZipFile(path);
+    await res.set({
+      'Content-Type': 'blob',
+      'Content-Disposition': `attachment; filename="${path}"`
+    });
     stream.pipe(res);
   }
 

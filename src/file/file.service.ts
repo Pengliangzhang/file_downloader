@@ -39,7 +39,7 @@ export class FileService {
     }
     
     await this.createZippedFile(fileDownloadInfo, resourcesDir);
-    return fs.createReadStream(resourcesDir);
+    return `${folderName}&${friendlyFileName}`;
   }
 
   async createZippedFile(fileDownloadInfo: FileDownloadReqDto, fullPath: string) {
@@ -191,6 +191,16 @@ export class FileService {
         response[value] = key
       });
     return response;
+  }
+
+  async getZipFile(path: string) {
+    const folderPath = `${__dirname}/../../resources/${path}.zip`
+    try {
+      return fs.createReadStream(folderPath);
+    } catch (error) {
+      console.log(error);
+      
+    }
   }
 
 }

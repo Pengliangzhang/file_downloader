@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsBoolean, IsArray } from 'class-validator';
+import { CheckReqDo } from '../do/checkReq.do';
 
 export class FileDownloadReqDto {
   @IsString()
@@ -7,5 +8,5 @@ export class FileDownloadReqDto {
 
   @IsArray()
   @IsNotEmpty()
-  checkList: [];
+  checkList: Array<CheckReqDo>;
 }
