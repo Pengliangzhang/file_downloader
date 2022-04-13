@@ -1,7 +1,6 @@
 /node_modules
 .DS_Store
 /dist
-/pkg
 package-lock.json
 .env
 /resources
