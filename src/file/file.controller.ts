@@ -31,7 +31,7 @@ export class FileController {
     const stream = await this.fileService.getZipFile(path);
     await res.set({
       'Content-Type': 'blob',
-      'Content-Disposition': `attachment; filename="${path}"`
+      'Content-Disposition': `attachment; filename="${path}.zip"`
     });
     stream.pipe(res);
   }
