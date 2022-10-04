@@ -29,7 +29,13 @@ export class FileController {
   async getAZipFile(@Param('path') path: string, @Res() res: Response) {   
     path = path.replace('&', '/');
     const stream = await this.fileService.getZipFile(path);
-    await res.set({
+    stream.on('error', (error) => {
+      res.set({
+        'Content-Type': 'text/plain'
+      });
+      return res.status(404).send('File Not Found!');
+    })
+    res.set({
       'Content-Type': 'blob',
       'Content-Disposition': `attachment; filename="${path}.zip"`
     });
