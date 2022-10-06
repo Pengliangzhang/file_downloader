@@ -14,7 +14,7 @@ export class common_file {
   @Column({ name: "check_alias", type: "varchar", length: 32 })
   public checkAlias: String;
 
-  @Column({ name: "xml_type", type: "varchar", length: 8 })
+  @Column({ name: "xml_type", type: "varchar", length: 32 })
   public xmlType: String;  
 
   @Column()

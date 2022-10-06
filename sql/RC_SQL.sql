@@ -31,7 +31,7 @@ CREATE TABLE `common_file`
     `scenario_name`                       varchar(16) NOT NULL COMMENT '',
     `check_name`                          varchar(32) NOT NULL COMMENT '',
     `check_alias`                         varchar(32) NOT NULL COMMENT '',
-    `xml_type`                            varchar(8) NOT NULL COMMENT 'Type of XML',
+    `xml_type`                            varchar(32) NOT NULL COMMENT 'Type of XML',
     `blob`                                LONGBLOB  NOT NULL COMMENT 'Buffer of a file',
     `file_name`                           varchar(32) NOT NULL COMMENT "File's name",
     `isVaild`                             tinyint(1)  DEFAULT 1 NOT NULL,
