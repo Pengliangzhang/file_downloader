@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { FileModule } from './file/file.module';
 import { UserModule } from './user/user.module';
 
+import { common_file } from './file/file.entity'
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -14,14 +16,22 @@ import { UserModule } from './user/user.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return {
+          name: 'hdi_shared',
           type: configService.get('TYPEORM_DB_TYPE'),
           host: configService.get('TYPEORM_DB_HOST'),
           port: configService.get('TYPEORM_DB_PORT'),
           username: configService.get('TYPEORM_DB_USERNAME'),
           password: configService.get('TYPEORM_DB_PASSWORD'),
-          database: configService.get('TYPEORM_DB_DATABASE'),
-          autoLoadEntities: configService.get('TYPEORM_DB_AUTOLOADENTITIES'),
-          synchronize: configService.get('TYPEORM_DB_SYNCHRONIZE'),
+          logging: configService.get('TYPEORM_DB_DEBUG'),
+          synchronize: false,
+          encrypt: true,
+          extra: {
+            sslValidateCertificate: true,
+            sslTrustStore: configService.get('TYPEORM_DB_AUTOLOADENTITIES'),
+            sslCryptoProvider: 'openssl',
+          },
+          entities: [ common_file ],
+          schema: configService.get('TYPEORM_DB_SCHEMA'),
         } as TypeOrmModuleOptions;
       }
     }),

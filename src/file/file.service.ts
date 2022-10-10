@@ -3,9 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { common_file } from './file.entity';
 import { Repository, getConnection, Connection } from 'typeorm';
 import * as fs from 'fs-extra';
-const archiver = require('archiver');
 import { FileUploadReqDto } from '../dto/fileUploadReq.dto';
 import { FileDownloadReqDto } from '../dto/fileDownloadReq.dto';
+
+const archiver = require('archiver');
+const uuid = require('uuid');
 
 @Injectable()
 export class FileService {
@@ -83,17 +85,18 @@ export class FileService {
       throw new Error('File size cannot exceed 100KB!');
     }
     const formattedData = JSON.parse(scenarioInfo.toString());
+
     const newFileRecord = await this.filesRepository.create({
+      ID: uuid.v4(),
       scenarioName: formattedData.scenarioName,
       checkName: formattedData.checkName,
       checkAlias: formattedData.checkName,
       xmlType: formattedData.xmlType,
       blob: file.buffer,
       fileName: file.originalname,
-      isVaild: 1,
+      isVaild: true,
       downloaded: 0,
-      createdUser: userId,
-      updatedUser: userId,
+      createdUser: userId
     });
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
@@ -101,7 +104,7 @@ export class FileService {
     try {
       const currVaildFile = await this.readVaildFile(formattedData);      
       if (currVaildFile) {
-        currVaildFile.isVaild = 0;
+        currVaildFile.isVaild = false;
         await queryRunner.manager.save(currVaildFile);
       }
       await queryRunner.manager.save(newFileRecord);
@@ -121,23 +124,23 @@ export class FileService {
   ) {
     let file = null;
     if (scenarioInfo.checkAlias) {
-      file = await getConnection()
+      file = await getConnection("hdi_shared")
         .getRepository(common_file)
         .createQueryBuilder("file")
-        .where("file.scenario_name = :scenario_name", { scenario_name: scenarioInfo.scenarioName })
-        .andWhere("file.check_name = :check_name", { check_name: scenarioInfo.checkName })
-        .andWhere("file.check_alias = :check_alias", { check_alias: scenarioInfo.checkAlias })
-        .andWhere("file.xml_type = :xml_type", { xml_type: scenarioInfo.xmlType })
-        .andWhere("file.isVaild = :isVaild", { isVaild: 1 })
+        .where("file.SCENARIONAME = :scenario_name", { scenario_name: scenarioInfo.scenarioName })
+        .andWhere("file.CHECKNAME = :check_name", { check_name: scenarioInfo.checkName })
+        .andWhere("file.CHECKALIAS = :check_alias", { check_alias: scenarioInfo.checkAlias })
+        .andWhere("file.XMLTYPE = :xml_type", { xml_type: scenarioInfo.xmlType })
+        .andWhere("file.ISVAILD = :isVaild", { isVaild: true })
         .getOne();
     } else {
-      file = await getConnection()
+      file = await getConnection("hdi_shared")
         .getRepository(common_file)
         .createQueryBuilder("file")
-        .where("file.scenario_name = :scenario_name", { scenario_name: scenarioInfo.scenarioName })
-        .andWhere("file.check_name = :check_name", { check_name: scenarioInfo.checkName })
-        .andWhere("file.xml_type = :xml_type", { xml_type: scenarioInfo.xmlType })
-        .andWhere("file.isVaild = :isVaild", { isVaild: 1 })
+        .where("file.SCENARIONAME = :scenario_name", { scenario_name: scenarioInfo.scenarioName })
+        .andWhere("file.CHECKNAME = :check_name", { check_name: scenarioInfo.checkName })
+        .andWhere("file.XMLTYPE = :xml_type", { xml_type: scenarioInfo.xmlType })
+        .andWhere("file.ISVAILD = :isVaild", { isVaild: 1 })
         .getOne();
     }
     return file;
@@ -156,35 +159,35 @@ export class FileService {
 
   // Generate a friendly filename
   async queryVaildScenario(){
-    const scenarioList = await getConnection()
+    const scenarioList = await getConnection("hdi_shared")
         .getRepository(common_file)
         .createQueryBuilder("file")
-        .select("DISTINCT (file.scenario_name)", "scenarioName")
-        .where("file.isVaild = :isVaild", { isVaild: 1 })
-        .groupBy("file.scenario_name")
+        .select("DISTINCT (file.SCENARIONAME)", "scenarioName")
+        .where("file.ISVAILD = :isVaild", { isVaild: true })
+        .groupBy("file.SCENARIONAME")
         .getRawMany()
     return scenarioList;
   }
 
-  // Generate a friendly filename
+  // Query all vaild check for a given scenario
   async queryVaildScenarioCheck(scenarioName: String){
-    const vaildCheckList = await getConnection()
+    const vaildCheckList = await getConnection("hdi_shared")
         .getRepository(common_file)
         .createQueryBuilder("file")
-        .select("file.check_name AS checkName, file.xml_type AS xmlType, file.check_alias", "checkAlias")
-        .where("file.scenario_name = :scenario_name", { scenario_name: scenarioName })
-        .andWhere("file.isVaild = :isVaild", { isVaild: 1 })
-        .orderBy("file.check_name")
-        .addOrderBy("file.check_alias")
+        .select("file.CHECKNAME AS checkName, file.XMLTYPE AS xmlType, file.CHECKALIAS", "checkAlias")
+        .where("file.SCENARIONAME = :scenario_name", { scenario_name: scenarioName })
+        .andWhere("file.ISVAILD = :isVaild", { isVaild: true })
+        .orderBy("file.CHECKNAME")
+        .addOrderBy("file.CHECKALIAS")
         .getRawMany()
       const vaildCheckMap = new Map();
       vaildCheckList.forEach((item) => {
         let checkArr = [];
-        if (vaildCheckMap.get(item.checkName)) {
-          checkArr = vaildCheckMap.get(item.checkName)
+        if (vaildCheckMap.get(item.CHECKNAME)) {
+          checkArr = vaildCheckMap.get(item.CHECKNAME)
         }
         checkArr.push(item);      
-        vaildCheckMap.set(item.checkName, checkArr);
+        vaildCheckMap.set(item.CHECKNAME, checkArr);
       });
       const response = {}
       vaildCheckMap.forEach((key, value) => {
